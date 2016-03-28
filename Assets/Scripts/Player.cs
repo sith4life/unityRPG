@@ -16,12 +16,15 @@ public class Player : MonoBehaviour {
     public int HitDie = 6;
     public int DamageReduction = 2; // DR valule (armour and shields and stuff)
     public int ActionPoints;
-
+    public int AttackRange;
+    public int MovementRange;
     public string Name;
 
     void Awake()
     {
         ActionPoints = 2;
+        AttackRange = 1;
+        MovementRange = 4;
         moveDestination = transform.position;
     }
 
@@ -30,9 +33,13 @@ public class Player : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
-	
-	}
+	public virtual void Update () {
+        if (HP <= 0)
+        {
+            transform.rotation = Quaternion.Euler(new Vector3(transform.rotation.eulerAngles.x + 90, transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.x));
+            rend.material.color = Color.red;
+        }
+    }
     public virtual void TurnUpdate()
     {
         if (ActionPoints <= 0)
@@ -46,5 +53,11 @@ public class Player : MonoBehaviour {
     public virtual void TurnOnGUI()
     {
 
+    }
+    void OnGUI()
+    {
+	    // display HP
+	    Vector3 location = Camera.main.WorldToScreenPoint(transform.position) + Vector3.up * 75;
+        GUI.Label(new Rect(location.x, Screen.height - location.y,30,20), HP.ToString());
     }
 }

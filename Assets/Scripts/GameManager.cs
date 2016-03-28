@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 public class GameManager : MonoBehaviour {
 
@@ -61,61 +62,81 @@ public class GameManager : MonoBehaviour {
     }
     public void moveCurrentPlayer(Tile destinationTile)
     {
-        players[PlayerIndex].GridPosition = destinationTile.GridPosition;
-        players[PlayerIndex].moveDestination = destinationTile.transform.position + 1.5f * Vector3.up;
-    }
-    public void attackWithCurrentPlayer(Tile destinationTile)
-    {
-        Player target = null;
-        foreach (Player p in players)
+        if (destTile.Rend.Color != Color.white && !destTile.imPassable)
         {
-            if (p.GridPosition == destinationTile.GridPosition)
-            {
-                target = p;
+            RemoveTileHightlights();
+            foreach (Tile t in TilePathFinder.FindPath(map[(int)players[PlayerIndex].GridPosition.x][(int)players[PlayerIndex].GridPosition.y]),destTile,players.Where(x => x.GridPosition != players[PlayerIndex].GridPosition).Select(x => x.GridPosition).toArray())
+		    {
+                players[PlayerIndex].positionQueue.Add(map[(int)t.GridPosition.x][(int)t.GridPosition.y].transform.position + 1.5f + Vector3.up);
             }
-        }
-        if (target != null && target.HP > 0 && target != players[PlayerIndex])
-        {
-            if (players[PlayerIndex].GridPosition.x >= target.GridPosition.x - 1 && players[PlayerIndex].GridPosition.x <= target.GridPosition.x + 1
-                && players[PlayerIndex].GridPosition.y >= target.GridPosition.y -1 && players[PlayerIndex].GridPosition.y <= target.GridPosition.y + 1)
-            {
-                bool critical;
-                // kill em
-                // D20 to hit vs Defense
-                if (RollToHIT(target, out critical))
-                {
-                    // kill him
-                    int dmg = RollDamage(target, critical);
-                    Debug.Log("Hit " + target.Name);
-                    Debug.Log("The swing causes " + dmg + " raw damage");
-                    Debug.Log("The target had " + target.HP + " and now has ");
-                    ApplyDamage(target, dmg);
-                    if (target.HP > 0)
-                    {
-                        Debug.Log(target.HP);
-                    }
-                    else
-                    {
-                        Debug.Log(0);
-                    }
-                }
-                else
-                {
-                    // you missed
-                    Debug.Log("Missed " + target.Name);
-                }
-                // HD + base = damage
-                // 
-                players[PlayerIndex].ActionPoints--;
-            }
-            else
-            {
-                Debug.Log(target.Name + " is too far away");
-            } 
+            players[PlayerIndex].GridPosition = destTile.GridPosition;
+            players[PlayerIndex].positionQueue.Reverse();
         }
         else
         {
-            Debug.Log("You don't have a target.");
+            Debug.Log("Destination invalid");
+        }
+    }
+    public void attackWithCurrentPlayer(Tile destinationTile)
+    {
+        if (destTile.Rend.Color != Color.white && !destTile.imPassable)
+        {
+            Player target = null;
+            foreach (Player p in players)
+            {
+                if (p.GridPosition == destinationTile.GridPosition)
+                {
+                    target = p;
+                }
+            }
+            if (target != null && target.HP > 0 && target != players[PlayerIndex])
+            {
+                if (players[PlayerIndex].GridPosition.x >= target.GridPosition.x - 1 && players[PlayerIndex].GridPosition.x <= target.GridPosition.x + 1
+                    && players[PlayerIndex].GridPosition.y >= target.GridPosition.y -1 && players[PlayerIndex].GridPosition.y <= target.GridPosition.y + 1)
+                {
+                    bool critical;
+                    // kill em
+                    // D20 to hit vs Defense
+                    if (RollToHIT(target, out critical))
+                    {
+                        // kill him
+                        int dmg = RollDamage(target, critical);
+                        Debug.Log("Hit " + target.Name);
+                        Debug.Log("The swing causes " + dmg + " raw damage");
+                        Debug.Log("The target had " + target.HP + " and now has ");
+                        ApplyDamage(target, dmg);
+                        if (target.HP > 0)
+                        {
+                            Debug.Log(target.HP);
+                        }
+                        else
+                        {
+                            Debug.Log(0);
+                        }
+                    }
+                    else
+                    {
+                        // you missed
+                        Debug.Log("Missed " + target.Name);
+                    }
+                    // HD + base = damage
+                    // 
+                    players[PlayerIndex].ActionPoints--;
+                }
+                else
+                {
+                    Debug.Log(target.Name + " is too far away");
+                } 
+            }
+            else
+            {
+                Debug.Log("You don't have a target.");
+            }
+            players[PlayerIndex].attacking = false;
+        }
+        else
+        {
+            Debug.Log("Destination invalid");
         }
     }
     void GenerateMap()
@@ -144,22 +165,21 @@ public class GameManager : MonoBehaviour {
         player.GridPosition = new Vector2(0,0);
         player.Name = "Link";
         players.Add(player);
-        Debug.Log(player.ActionPoints);
 
         player = ((GameObject)Instantiate(CharacterPrefab, new Vector3((MapSize - 1) - Mathf.Floor(MapSize / 2), 1.45f, -(MapSize - 1) + Mathf.Floor(MapSize / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
         player.GridPosition = new Vector2(14,14);
         player.Name = "Mario";
         players.Add(player);
-        Debug.Log(player.ActionPoints);
 
         player = ((GameObject)Instantiate(CharacterPrefab, new Vector3(4 - Mathf.Floor(MapSize / 2), 1.45f, -4 + Mathf.Floor(MapSize / 2)), Quaternion.Euler(new Vector3()))).GetComponent<UserPlayer>();
         player.GridPosition = new Vector2(4,4);
         player.Name = "Marth";
         players.Add(player);
-        Debug.Log(player.ActionPoints);
 
-        //AIPlayer aiplayer = ((GameObject)Instantiate(AIPrefab, new Vector3(6 - Mathf.Floor(MapSize / 2), 1.45f, -4 + Mathf.Floor(MapSize / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
-        //players.Add(aiplayer);
+        AIPlayer aiplayer = ((GameObject)Instantiate(AIPrefab, new Vector3(6 - Mathf.Floor(MapSize / 2), 1.45f, -4 + Mathf.Floor(MapSize / 2)), Quaternion.Euler(new Vector3()))).GetComponent<AIPlayer>();
+        players.Add(aiplayer);
+        aiplayer.GridPosition = new Vector2(6, 4);
+        aiplayer.Name = "Roy";
         foreach (Player p in players)
         {
             Debug.Log(p.GridPosition);
@@ -202,5 +222,35 @@ public class GameManager : MonoBehaviour {
     public void ApplyDamage(Player target, int DamageDone)
     {
         target.HP -= (DamageDone-target.DamageReduction); // subtract DR from damage than modify target HP
+    }
+    public void hightlightTilesAt(Vector2 originLocation, Color HighlightColor, int range, bool ignorePlayers = true)
+    {
+
+        List<Tile> hightlightedTiles = new List<Tile>();
+        if (ignorePlayers)
+        {
+            hightlightedTiles = TileHighlight.FindHightlight(map[(int)originLocation.x][(int)originLocation.y], range);
+        }
+        else
+        {
+            hightlightedTiles = TileHighlight.FindHightlight(map[(int)originLocation.x][(int)originLocation.y], range, players.Where(x => x.GridPosition != originLocation).Select(x => x.GridPosition).toArray());
+        }
+        foreach (Tile t in hightlightedTiles)
+        {
+            t.Rend.material.color = HighlightColor;
+        }
+    }
+    public void RemoveTileHightlights()
+    {
+        for (int i = 0; i < mapSize; i++)
+        {
+            for (int j = 0; j < mapSize; j++)
+            {
+                if (!map[i][j].imPassable)
+                {
+                    map[i][j].Rend.material.color Color.white;
+                }
+            }
+        }
     }
 }

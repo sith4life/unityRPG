@@ -11,9 +11,9 @@ public class UserPlayer : Player
         moveSpeed = 10.0f;
         rend = gameObject.GetComponent<Renderer>();
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    public override void Update () {
         if (GameManager.Instance.players[GameManager.Instance.PlayerIndex] == this) // is this (the current) player referenced in the GameManager
         {
             rend.material.color = Color.yellow;
@@ -22,56 +22,60 @@ public class UserPlayer : Player
         {
             rend.material.color = Color.white;
         }
-        if (HP <= 0)
-        {
-            transform.rotation = Quaternion.Euler(new Vector3(transform.rotation.eulerAngles.x + 90, transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.x));
-            rend.material.color = Color.red;
-        }
+        base.Update();
     }
     public override void TurnUpdate()
     {
-        if (Vector3.Distance(moveDestination,transform.position) > 0.1f)
+        if (positionQueue.Count > 0)
         {
-            transform.position += (moveDestination - transform.position).normalized * moveSpeed * Time.deltaTime;
-            if (Vector3.Distance(moveDestination, transform.position) <= 0.1f)
+            if (Vector3.Distance(positionQueue[0], transform.position) > 0.1f)
             {
-                transform.position = moveDestination;
-                ActionPoints--;
+                transform.position += (positionQueue[0] - transform.position).normalized * moveSpeed * Time.deltaTime;
+            }
+            if (Vector3.Distance(positionQueue[0], transform.position) <= 0.1f)
+            {
+                transform.position = positionQueue[0];
+                positionQueue.RemoveAt(0);
+                if (positionQueue.Count == 0)
+                {
+                    actionPoints--;
+                }
             }
         }
         base.TurnUpdate();
     }
     public override void TurnOnGUI()
     {
-        float buttonHeight = 50;
-        float buttonWidth = 90;
-        
-        // move button
-        if (GUI.Button(new Rect(0, Screen.height - buttonHeight * 3, buttonWidth, buttonHeight), "Move"))
+        // diffs below
+
+        if (!moving)
         {
+            GameManager.Instance.RemoveTileHightlights();
             moving = !moving;
             attacking = false;
+            GameManager.Instance.hightlightTilesAt(GridPosition, Color.blue, movementRange, false);
+        }
+        else
+        {
+            attacking = false;
+            moving = false;
+            GameManager.Instance.RemoveTileHightlights();
         }
 
-        // attack button
-        if (GUI.Button(new Rect(0, Screen.height - buttonHeight * 2, buttonWidth, buttonHeight), "Attack"))
+        if (!attacking)
         {
             moving = false;
             attacking = !attacking;
+            GameManager.Instance.hightlightTilesAt(GridPosition, Color.red, attackRange);
         }
-
-        // end turn button
-        if (GUI.Button(new Rect(0, Screen.height - buttonHeight * 1, buttonWidth, buttonHeight), "End Turn"))
+        else
         {
-            ActionPoints = 2;
             moving = false;
             attacking = false;
-            GameManager.Instance.NextTurn();
+            GameManager.Instance.RemoveTileHightlights();
         }
 
-        base.TurnOnGUI();
+        // EndTurnButton add 
+        GameManager.Instance.RemoveTileHightlights();
     }
-
-    
-
 }
