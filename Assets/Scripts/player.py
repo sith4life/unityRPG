@@ -1,13 +1,13 @@
 import pygame
-from pygame.math import Vector2
-from game_manager import GameManager
 
 class Player:
-    def __init__(self, position=(0, 0), name="Player"):
-        self.position = Vector2(position)
-        self.grid_position = Vector2(position)
+    def __init__(self, position=(0, 0), name="Player",is_ai=False):
+        """Initialize the player with position, name, and AI status."""
+        self.position = pygame.math.Vector2(position)
+        self.grid_position = pygame.math.Vector2(position)
         self.moving = False
         self.attacking = False
+        self.is_ai = is_ai
 
         # Static RPG attributes
         self.hp = 25

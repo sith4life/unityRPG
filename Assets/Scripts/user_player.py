@@ -1,7 +1,6 @@
 import pygame
 from pygame.math import Vector2
 from player import Player
-from game_manager import GameManager
 
 class UserPlayer(Player):
     def __init__(self, position=(0, 0), name="UserPlayer"):
@@ -40,5 +39,5 @@ class UserPlayer(Player):
         font = pygame.font.Font(None, 24)
         hp_text = font.render(f"HP: {self.hp}", True, (255, 255, 255))
         ap_text = font.render(f"AP: {self.action_points}", True, (255, 255, 255))
-        screen.blit(hp_text, (self.position.x - 20, self.position.y - 40))
-        screen.blit(ap_text, (self.position.x - 20, self.position.y - 20))
+        screen.blit(hp_text, (self.position[0], self.position[1]))
+        screen.blit(ap_text, (self.position[0] - 20, self.position[1] - 20))

@@ -1,13 +1,12 @@
 import pygame
 from pygame.math import Vector2
-from game_manager import GameManager
 from player import Player
 
 class AIPlayer(Player):
     def __init__(self, position=(0, 0), name="AIPlayer"):
         super().__init__(position, name)
         self.move_speed = 8.0
-        self.color = (0, 255, 0)  # Default color (green)
+        self.color = (0, 0, 255)  # Default color (green)
 
     def update(self):
         """Update AI logic."""
