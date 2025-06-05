@@ -3,19 +3,21 @@ from pygame.math import Vector2
 from player import Player
 
 class AIPlayer(Player):
-    def __init__(self, position=(0, 0), name="AIPlayer"):
-        super().__init__(position, name)
+    def __init__(self, position=(0, 0), name="AIPlayer", color=(0, 0, 255)):
+        """Initialize the AI player with position, name, and color."""
+        super().__init__(position, name, color)
         self.move_speed = 8.0
-        self.color = (0, 0, 255)  # Default color (green)
+        self.color = color # Default color (green)
+        self.default_color = color  # Default color (white)
 
-    def update(self):
+    def update(self,*args,**kwargs):
         """Update AI logic."""
-        super().update()
-        current_player = GameManager.instance.players[GameManager.instance.player_index]
-        if current_player == self:
-            self.color = (0, 255, 0)  # Green for active AI player
-        else:
-            self.color = (255, 255, 255)  # White for inactive AI player
+        super().update(kwargs)
+        # current_player = GameManager.instance.players[GameManager.instance.player_index]
+        # if current_player == self:
+        #     self.color = (0, 255, 0)  # Green for active AI player
+        # else:
+        #     self.color = (255, 255, 255)  # White for inactive AI player
 
     def turn_update(self):
         """AI-specific turn logic."""
@@ -40,7 +42,7 @@ class AIPlayer(Player):
 
     def render(self, screen):
         """Render the AI player as a circle on the screen."""
-        pygame.draw.circle(screen, self.color, (int(self.position.x), int(self.position.y)), self.radius)
+        pygame.draw.circle(screen, self.color, (int(self.position[0]), int(self.position[1])), self.radius)
 
     def attack(self, target):
         """AI attack logic."""

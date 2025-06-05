@@ -3,19 +3,22 @@ from pygame.math import Vector2
 from player import Player
 
 class UserPlayer(Player):
-    def __init__(self, position=(0, 0), name="UserPlayer"):
-        super().__init__(position, name)
+    def __init__(self, position=(0, 0), name="UserPlayer", color=(255, 255, 255)):
+        """Initialize the user player with position, name, and color."""
+        super().__init__(position, name, color)
         self.move_speed = 10.0
-        self.color = (255, 255, 0)  # Default color (yellow)
+        self.color = color
+        self.default_color = color  # Default color (white)
 
-    def update(self):
+    def update(self,*args,**kwargs):
         """Update logic for the user player."""
-        super().update()
-        current_player = GameManager.instance.players[GameManager.instance.player_index]
-        if current_player == self:
-            self.color = (255, 255, 0)  # Yellow for active user player
-        else:
-            self.color = (255, 255, 255)  # White for inactive user player
+        super().update(kwargs)
+        print(kwargs)
+        # current_player = GameManager.instance.players[GameManager.instance.player_index]
+        # if current_player == self:
+        #     self.color = (255, 255, 0)  # Yellow for active user player
+        # else:
+        #     self.color = (255, 255, 255)  # White for inactive user player
 
     def turn_update(self):
         """Handle user-specific turn updates."""
@@ -32,7 +35,7 @@ class UserPlayer(Player):
 
     def render(self, screen):
         """Render the user player as a circle on the screen."""
-        pygame.draw.circle(screen, self.color, (int(self.position.x), int(self.position.y)), self.radius)
+        pygame.draw.circle(screen, self.color, (int(self.position[0]), int(self.position[1])), self.radius)
 
     def on_gui(self, screen):
         """Display the player's HP and action points."""

@@ -1,13 +1,24 @@
 import pygame
 
 class Player:
-    def __init__(self, position=(0, 0), name="Player",is_ai=False):
+    def __init__(self, position=(0, 0), name="Player",is_ai=False, size=50, color=(255, 255, 255)):
         """Initialize the player with position, name, and AI status."""
-        self.position = pygame.math.Vector2(position)
-        self.grid_position = pygame.math.Vector2(position)
         self.moving = False
+        self.target_positions = []
         self.attacking = False
         self.is_ai = is_ai
+
+        self.path = []
+        self.position_queue = []
+        self.target = None
+        self.target_position = None
+        self.move_speed = 200.0  # Speed of the player
+        self.attack_speed = 1.0  # Attack speed of the player
+        self.attack_range = 1.0  # Attack range of the player
+        self.movement_range = 4  # Movement range of the player
+        self.action_points = 2  # Action points for the player
+        self.attacking = False
+        self.moving = False
 
         # Static RPG attributes
         self.hp = 25
@@ -22,10 +33,36 @@ class Player:
         self.name = name
 
         # PyGame-specific attributes
-        self.color = (255, 255, 255)  # Default color (white)
+        self.color = color  # Default color (white)
         self.radius = 15  # Radius for rendering the player as a circle
+        self.transform = pygame.Rect(position[1],position[0],self.radius,self.radius)
+        self.position = pygame.math.Vector2(position)
+        self.grid_position : tuple = (int(position[1] // size), int(position[0] // size))
 
-    def update(self):
+    def update(self, delta_time):
+        """Update the player's position based on delta time."""
+        if self.moving and self.current_target:
+            # Calculate the direction vector toward the target
+            direction = self.current_target - self.position
+            print(direction)
+            distance_to_move = self.move_speed * delta_time  # Movement increment based on delta time
+
+            print(f"Position: {self.position}, Target: {self.current_target}, Direction: {direction}, Distance to Move: {distance_to_move}")  # Debug print
+            
+            if direction.length() > 0:  # Avoid division by zero
+                direction = direction.normalize()  # Normalize the direction vector
+
+            # Move toward the target
+            if direction.length() > distance_to_move:
+                self.position += direction * distance_to_move
+            else:
+                # Snap to the target only when fully reached
+                self.position = self.current_target
+                self.grid_position = (int(self.position.y // 50), int(self.position.x // 50))
+                if self.target_positions:
+                    self.current_target = self.target_positions.pop(0)
+                else:
+                    self.moving = False
         if self.hp <= 0:
             self.color = (255, 0, 0)  # Red color for dead players
 
@@ -38,17 +75,20 @@ class Player:
 
     def render(self, screen):
         """Render the player as a circle on the screen."""
-        pygame.draw.circle(screen, self.color, (int(self.position.x), int(self.position.y)), self.radius)
+        pygame.draw.circle(screen, self.color, (round(self.position.x), round(self.position.y)), self.radius)
 
-    def move_to(self, destination):
-        """Move the player to a new position."""
-        if self.moving:
-            direction = (destination - self.position).normalize()
-            self.position += direction * self.movement_range
-            if self.position.distance_to(destination) < 1:
-                self.position = destination
-                self.moving = False
-                self.action_points -= 1
+    def move_to(self, map):
+        """Set the path for the player to follow."""
+        tile_size = map.tile_size
+        path = map.path
+        self.target_positions = [pygame.math.Vector2(tile.position) + (map.tile_size // 2, map.tile_size // 2) for tile in map.path]
+        print(f"Target Positions: {self.target_positions}")  # Debug print
+        if self.target_positions:
+            self.current_target = self.target_positions.pop(0)
+            self.moving = True
+        else:
+            self.moving = False
+            
 
     def attack(self, target):
         """Attack a target if within range."""
